@@ -1,15 +1,55 @@
 (function()
 {
     var GRID_SQUARE_SIZE = 10;
-    var GRID_COLUMNS = 50;
+    var GRID_COLUMNS = 70;
     var GRID_ROWS = 50;
+    var RANDOM_CELLS = 10;
+    
+    
+    
+    
     
     var CANVAS_WIDTH = GRID_SQUARE_SIZE*GRID_COLUMNS + 1;
     var CANVAS_HEIGHT = GRID_SQUARE_SIZE*GRID_ROWS + 1;
     
+    var world = [];
+    var context;
     
     
-    var drawGrid = function(context)
+    
+    
+    
+    var createWorld = function()
+    {
+        for(var i=0; i<GRID_COLUMNS; i++)
+        {
+            var row = [];
+            
+            for(var j = 0; j<GRID_ROWS; j++)
+            {
+                row[j] = 0;
+            }
+            
+            world[i] = row;
+        }
+    };
+    
+    var createRandomCells = function()
+    {
+        for(var i=0; i<RANDOM_CELLS; i++)
+        {
+            do
+            {
+                var column = Math.floor(Math.random() * GRID_COLUMNS);
+                var row = Math.floor(Math.random() * GRID_ROWS);
+            }
+            while(world[column][row] == 1);
+            
+            world[column][row] = 1;
+        }
+    };
+    
+    var drawGrid = function()
     {
         context.lineWidth = 1;
         context.strokeStyle = "black";
@@ -37,7 +77,7 @@
         context.stroke();
     };
     
-    var drawSquare = function(context, i, j, color)
+    var drawSquare = function(i, j, color)
     {
         context.fillStyle = color || "black";
         context.fillRect(GRID_SQUARE_SIZE*i+1,
@@ -46,7 +86,7 @@
                          GRID_SQUARE_SIZE-1);
     };
     
-    var drawCircle = function(context, i, j, color)
+    var drawCircle = function(i, j, color)
     {
         context.fillStyle = color || "black";
         context.beginPath();
@@ -54,27 +94,42 @@
         context.fill();
     };
     
+    var drawCells = function()
+    {
+        for(var i=0; i<CANVAS_WIDTH; i++)
+        {
+            for(var j=0; j<CANVAS_HEIGHT; j++)
+            {
+                if (world[i][j] == 1)
+                {
+                    drawSquare(i, j);
+                }
+            }
+        }
+    };
+    
+    
+    
     
     
     var canvas = document.getElementById("game");
     canvas.width = CANVAS_WIDTH;
     canvas.height = CANVAS_HEIGHT;
     
-    var ctx = canvas.getContext("2d");
+    context = canvas.getContext("2d");
     
-    drawGrid(ctx);
+    createWorld();
+    createRandomCells();
+    
+    drawGrid();
+    drawCells();
+    
+    
     
     /*TODO
+        - main game of life loop
         - use an IEF for the klotski game (on github + website + backups)
-        - define a world array
+        - later, with a button/form, allow the user to draw square or circles, and depending on his choice, use a "var drawCell" that will be set either on drawSquare or drawCircle
     */
-    
-    /*TODO
-    - later, with a button/form, allow the user to draw square or circles, and depending on his choice, use a "var drawCell" that will be set either on drawSquare or drawCircle
-    */
-    
-    
-    
-    
 })();
 
