@@ -3,7 +3,7 @@
     var GRID_SQUARE_SIZE = 10;
     var GRID_COLUMNS = 70;
     var GRID_ROWS = 50;
-    var RANDOM_CELLS = 10;
+    var RANDOM_CELLS = 0;
     
     
     
@@ -27,7 +27,8 @@
             
             for(var j = 0; j<GRID_ROWS; j++)
             {
-                row[j] = 0;
+                //row[j] = 0;
+                row[j] = {current: 0, next: 0};
             }
             
             world[i] = row;
@@ -43,9 +44,11 @@
                 var column = Math.floor(Math.random() * GRID_COLUMNS);
                 var row = Math.floor(Math.random() * GRID_ROWS);
             }
-            while(world[column][row] == 1);
+            //while(world[column][row] == 1);
+            while(world[column][row].current == 1);
             
-            world[column][row] = 1;
+            //world[column][row] = 1;
+            world[column][row] = {current: 1, next: 0};
         }
     };
     
@@ -53,15 +56,19 @@
     {
         if (i < 0 || i >= GRID_COLUMNS
          || j < 0 || j >= GRID_ROWS
-         || world[i][j] == 0)
+         //|| world[i][j] == 0)
+         || world[i][j].current == 0)
         {
             return false;
         }
         
-        if (world[i][j] == 1)
+        //if (world[i][j] == 1)
+        if (world[i][j].current == 1)
         {
             return true;
         }
+        
+        return false;
     };
     
     var countCellAliveNeighbours = function(i, j)
@@ -82,11 +89,26 @@
     
     var isNextStepCellAlive = function(i, j)
     {
+        if (world[i][j].current == 0)
+        {
+            var neighbours = countCellAliveNeighbours(i,j);
+            return (neighbours == 3) ? true : false;
+        }
         
+        if (world[i][j].current == 1)
+        {
+            var neighbours = countCellAliveNeighbours(i,j);
+            return (neighbours == 2 || neighbours == 3) ? true : false;
+        }
+        
+        return false;
     };
     
     var drawGrid = function()
     {
+        context.fillStyle = "white";
+        context.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+        
         context.lineWidth = 1;
         context.strokeStyle = "black";
         
@@ -136,7 +158,8 @@
         {
             for(var j=0; j<GRID_ROWS; j++)
             {
-                if (world[i][j] == 1)
+                //if (world[i][j] == 1)
+                if (world[i][j].current == 1)
                 {
                     drawSquare(i, j);
                 }
@@ -155,17 +178,100 @@
     context = canvas.getContext("2d");
     
     createWorld();
-    world[10][10] = 1;
+    
+    // glider
+    world[9][8].current = 1;
+    world[10][9].current = 1;
+    world[8][10].current = 1;
+    world[9][10].current = 1;
+    world[10][10].current = 1;
+    
+    // frog
+    world[20][10].current = 1
+    world[21][10].current = 1
+    world[22][10].current = 1
+    world[19][11].current = 1
+    world[20][11].current = 1
+    world[21][11].current = 1
+    
+    // gun
+    world[30][10].current = 1;
+    world[31][10].current = 1;
+    world[30][11].current = 1;
+    world[31][11].current = 1;
+    world[43][8].current = 1;
+    world[42][8].current = 1;
+    world[41][9].current = 1;
+    world[40][10].current = 1;
+    world[40][11].current = 1;
+    world[40][12].current = 1;
+    world[41][13].current = 1;
+    world[42][14].current = 1;
+    world[43][14].current = 1;
+    world[44][11].current = 1;
+    world[45][9].current = 1;
+    world[45][13].current = 1;
+    world[46][10].current = 1;
+    world[46][11].current = 1;
+    world[46][12].current = 1;
+    world[47][11].current = 1;
+    world[50][8].current = 1;
+    world[50][9].current = 1;
+    world[50][10].current = 1;
+    world[51][8].current = 1;
+    world[51][9].current = 1;
+    world[51][10].current = 1;
+    world[52][7].current = 1;
+    world[52][11].current = 1;
+    world[54][6].current = 1;
+    world[54][7].current = 1;
+    world[54][11].current = 1;
+    world[54][12].current = 1;
+    world[64][8].current = 1;
+    world[65][8].current = 1;
+    world[64][9].current = 1;
+    world[65][9].current = 1;
+    
     createRandomCells();
     
     drawGrid();
     drawCells();
     
+    setInterval(function()
+                {
+                    for(var i=0; i<GRID_COLUMNS; i++)
+                    {
+                        for(var j=0; j<GRID_ROWS; j++)
+                        {
+                            if (isNextStepCellAlive(i,j))
+                            {
+                                world[i][j].next = 1;
+                            }
+                        }
+                    }
+                    
+                    for(var i=0; i<GRID_COLUMNS; i++)
+                    {
+                        for(var j=0; j<GRID_ROWS; j++)
+                        {
+                            world[i][j].current = world[i][j].next;
+                            world[i][j].next = 0;
+                        }
+                    }
+                    
+                    drawGrid();
+                    drawCells();
+                },
+                100);
+    
+    
+    
     
     
     /*TODO
-        - main game of life loop
         - use an IEF for the klotski game (on github + website + backups)
+        - add a "news" part on my website main page
+        - don't stop the cells at the canvas boundaries, but make them go to the opposite side ?
         - later, with a button/form, allow the user to draw square or circles, and depending on his choice, use a "var drawCell" that will be set either on drawSquare or drawCircle
     */
 })();
