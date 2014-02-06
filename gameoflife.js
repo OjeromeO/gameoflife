@@ -49,6 +49,42 @@
         }
     };
     
+    var isCurrentStepCellAlive = function(i, j)
+    {
+        if (i < 0 || i >= GRID_COLUMNS
+         || j < 0 || j >= GRID_ROWS
+         || world[i][j] == 0)
+        {
+            return false;
+        }
+        
+        if (world[i][j] == 1)
+        {
+            return true;
+        }
+    };
+    
+    var countCellAliveNeighbours = function(i, j)
+    {
+        var count = 0;
+        
+        if (isCurrentStepCellAlive(i-1, j-1)) {count++;}
+        if (isCurrentStepCellAlive(i,   j-1)) {count++;}
+        if (isCurrentStepCellAlive(i+1, j-1)) {count++;}
+        if (isCurrentStepCellAlive(i-1, j)) {count++;}
+        if (isCurrentStepCellAlive(i+1, j)) {count++;}
+        if (isCurrentStepCellAlive(i-1, j+1)) {count++;}
+        if (isCurrentStepCellAlive(i,   j+1)) {count++;}
+        if (isCurrentStepCellAlive(i+1, j+1)) {count++;}
+        
+        return count;
+    };
+    
+    var isNextStepCellAlive = function(i, j)
+    {
+        
+    };
+    
     var drawGrid = function()
     {
         context.lineWidth = 1;
@@ -96,9 +132,9 @@
     
     var drawCells = function()
     {
-        for(var i=0; i<CANVAS_WIDTH; i++)
+        for(var i=0; i<GRID_COLUMNS; i++)
         {
-            for(var j=0; j<CANVAS_HEIGHT; j++)
+            for(var j=0; j<GRID_ROWS; j++)
             {
                 if (world[i][j] == 1)
                 {
@@ -119,6 +155,7 @@
     context = canvas.getContext("2d");
     
     createWorld();
+    world[10][10] = 1;
     createRandomCells();
     
     drawGrid();
