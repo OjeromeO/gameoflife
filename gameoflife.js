@@ -3,19 +3,21 @@
     var GRID_SQUARE_SIZE = 10;
     var GRID_COLUMNS = 70;
     var GRID_ROWS = 50;
-    var RANDOM_CELLS = 0;
-    
-    
+    var RANDOM_CELLS = 300;
     
     
     
     var CANVAS_WIDTH = GRID_SQUARE_SIZE*GRID_COLUMNS + 1;
     var CANVAS_HEIGHT = GRID_SQUARE_SIZE*GRID_ROWS + 1;
     
-    var world = [];
     var context;
-    
-    
+    var world = [];
+    var settings =
+    {
+        grid: undefined,
+        randomcells: undefined,
+        drawfunction: undefined
+    };
     
     
     
@@ -27,7 +29,6 @@
             
             for(var j = 0; j<GRID_ROWS; j++)
             {
-                //row[j] = 0;
                 row[j] = {current: 0, next: 0};
             }
             
@@ -44,10 +45,8 @@
                 var column = Math.floor(Math.random() * GRID_COLUMNS);
                 var row = Math.floor(Math.random() * GRID_ROWS);
             }
-            //while(world[column][row] == 1);
             while(world[column][row].current == 1);
             
-            //world[column][row] = 1;
             world[column][row] = {current: 1, next: 0};
         }
     };
@@ -56,13 +55,11 @@
     {
         if (i < 0 || i >= GRID_COLUMNS
          || j < 0 || j >= GRID_ROWS
-         //|| world[i][j] == 0)
          || world[i][j].current == 0)
         {
             return false;
         }
         
-        //if (world[i][j] == 1)
         if (world[i][j].current == 1)
         {
             return true;
@@ -109,6 +106,9 @@
         context.fillStyle = "white";
         context.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
         
+        if (!settings.grid)
+            return;
+        
         context.lineWidth = 1;
         context.strokeStyle = "black";
         
@@ -137,7 +137,7 @@
     
     var drawSquare = function(i, j, color)
     {
-        context.fillStyle = color || "black";
+        context.fillStyle = color || "gray";
         context.fillRect(GRID_SQUARE_SIZE*i+1,
                          GRID_SQUARE_SIZE*j+1,
                          GRID_SQUARE_SIZE-1,
@@ -146,7 +146,7 @@
     
     var drawCircle = function(i, j, color)
     {
-        context.fillStyle = color || "black";
+        context.fillStyle = color || "gray";
         context.beginPath();
         context.arc(GRID_SQUARE_SIZE*i+5.5, GRID_SQUARE_SIZE*j+5.5, 4.5, 0, 2*Math.PI, true);
         context.fill();
@@ -158,16 +158,84 @@
         {
             for(var j=0; j<GRID_ROWS; j++)
             {
-                //if (world[i][j] == 1)
                 if (world[i][j].current == 1)
                 {
-                    drawSquare(i, j);
+                    //drawSquare(i, j);
+                    settings.drawfunction(i, j);
+                    //drawfunction(i, j);
                 }
             }
         }
     };
     
+    var gameloop = function()
+    {
+        /* TODO: 2 double-for here, could be improved with a 3-properties world[][] ?
+            world[][].now1 / .now2 / .now3
+            => 1 double-for with current="now1", next="now2", tmp="now3" : 
+            
+                if (isNextStepCellAlive(i,j))
+                {
+                    world[i][j][next] = 1;
+                }
+                world[i][j][tmp] = 0;
+                // + make sure drawCells() know that now2 contains the values to use
+            
+            next step, with current = "now2", next = "now3", tmp = "now1" : ...
+            use an integer to know the step and know wich now has to be used for what
+            => benchmark with performance.now() ?
+        */
+        
+        for(var i=0; i<GRID_COLUMNS; i++)
+        {
+            for(var j=0; j<GRID_ROWS; j++)
+            {
+                if (isNextStepCellAlive(i,j))
+                {
+                    world[i][j].next = 1;
+                }
+            }
+        }
+        
+        for(var i=0; i<GRID_COLUMNS; i++)
+        {
+            for(var j=0; j<GRID_ROWS; j++)
+            {
+                world[i][j].current = world[i][j].next;
+                world[i][j].next = 0;
+            }
+        }
+        
+        drawGrid();
+        drawCells();
+        
+        /* setTimeout() VS setInterval()
+           - chained setTimeout() will never eat 100% CPU (if it's called at the
+           end of the function), whereas setInterval() could : if the function
+           needs more time than the interval to execute, the next execution will
+           be pending and then executed as soon as the previous execution is
+           finished
+           - we don't need very precise intervals for a game of life ^^
+        */
+        setTimeout(gameloop, 140);
+    };
     
+    var fgrid = function()
+    {
+        settings.grid = document.getElementById("grid").checked;
+    };
+    
+    var fshape = function()
+    {
+        if (document.getElementById("circles").checked)
+        {
+            settings.drawfunction = drawCircle;
+        }
+        else
+        {
+            settings.drawfunction = drawSquare;
+        }
+    };
     
     
     
@@ -177,102 +245,30 @@
     
     context = canvas.getContext("2d");
     
+    settings.grid = true;
+    settings.randomcells = 100;
+    settings.drawfunction = drawSquare;
+    
+    document.getElementById("grid").addEventListener("click", fgrid);
+    document.getElementById("squares").addEventListener("click", fshape);
+    document.getElementById("circles").addEventListener("click", fshape);
+    
     createWorld();
-    
-    // glider
-    world[9][8].current = 1;
-    world[10][9].current = 1;
-    world[8][10].current = 1;
-    world[9][10].current = 1;
-    world[10][10].current = 1;
-    
-    // frog
-    world[20][10].current = 1
-    world[21][10].current = 1
-    world[22][10].current = 1
-    world[19][11].current = 1
-    world[20][11].current = 1
-    world[21][11].current = 1
-    
-    // gun
-    world[30][10].current = 1;
-    world[31][10].current = 1;
-    world[30][11].current = 1;
-    world[31][11].current = 1;
-    world[43][8].current = 1;
-    world[42][8].current = 1;
-    world[41][9].current = 1;
-    world[40][10].current = 1;
-    world[40][11].current = 1;
-    world[40][12].current = 1;
-    world[41][13].current = 1;
-    world[42][14].current = 1;
-    world[43][14].current = 1;
-    world[44][11].current = 1;
-    world[45][9].current = 1;
-    world[45][13].current = 1;
-    world[46][10].current = 1;
-    world[46][11].current = 1;
-    world[46][12].current = 1;
-    world[47][11].current = 1;
-    world[50][8].current = 1;
-    world[50][9].current = 1;
-    world[50][10].current = 1;
-    world[51][8].current = 1;
-    world[51][9].current = 1;
-    world[51][10].current = 1;
-    world[52][7].current = 1;
-    world[52][11].current = 1;
-    world[54][6].current = 1;
-    world[54][7].current = 1;
-    world[54][11].current = 1;
-    world[54][12].current = 1;
-    world[64][8].current = 1;
-    world[65][8].current = 1;
-    world[64][9].current = 1;
-    world[65][9].current = 1;
-    
     createRandomCells();
     
     drawGrid();
     drawCells();
     
-    setInterval(function()
-                {
-                    for(var i=0; i<GRID_COLUMNS; i++)
-                    {
-                        for(var j=0; j<GRID_ROWS; j++)
-                        {
-                            if (isNextStepCellAlive(i,j))
-                            {
-                                world[i][j].next = 1;
-                            }
-                        }
-                    }
-                    
-                    for(var i=0; i<GRID_COLUMNS; i++)
-                    {
-                        for(var j=0; j<GRID_ROWS; j++)
-                        {
-                            world[i][j].current = world[i][j].next;
-                            world[i][j].next = 0;
-                        }
-                    }
-                    
-                    drawGrid();
-                    drawCells();
-                },
-                100);
-    
-    
-    
-    
+    setTimeout(gameloop, 100);
     
     /*TODO
-        - use an IEF for the klotski game (on github + website + backups)
+        - add start/reset button (do...while() of the code, beginning after the context=... ?)
+        - add input for count of random cells (mousedown, mouseup, input, keypress) : just at the beginning 
+        - add input for interval between refresh
+        - display the generation count
+        - allow user to make pixels alive/dead ("activate god mode" ^^)
         - add a "news" part on my website main page
-        - don't stop the cells at the canvas boundaries, but make them go to the opposite side ?
-        - later, with a button/form, allow the user to draw square or circles, and depending on his choice, use a "var drawCell" that will be set either on drawSquare or drawCircle
+        - use a project page for the gfame of life, and link it to my personal website (same thing for klotski, instead of replicating all the stuff...)
     */
 })();
 
