@@ -15,92 +15,15 @@
     {
         grid: undefined,
         randomcells: undefined,
-        drawfunction: undefined
+        drawfunction: undefined,
+        refreshinterval: undefined
     };
     var gameloopID;
     var generation = 0;
     
     
     
-    var initWorld = function()
-    {
-        for(var i=0; i<GRID_COLUMNS; i++)
-        {
-            var row = [];
-            
-            for(var j = 0; j<GRID_ROWS; j++)
-            {
-                row[j] = {current: 0, next: 0};
-            }
-            
-            world[i] = row;
-        }
-    };
-    
-    var createRandomCells = function()
-    {
-        for(var i=0; i<settings.randomcells; i++)
-        {
-            do
-            {
-                var column = Math.floor(Math.random() * GRID_COLUMNS);
-                var row = Math.floor(Math.random() * GRID_ROWS);
-            }
-            while(world[column][row].current == 1);
-            
-            world[column][row] = {current: 1, next: 0};
-        }
-    };
-    
-    var isCurrentStepCellAlive = function(i, j)
-    {
-        if (i < 0 || i >= GRID_COLUMNS
-         || j < 0 || j >= GRID_ROWS
-         || world[i][j].current == 0)
-        {
-            return false;
-        }
-        
-        if (world[i][j].current == 1)
-        {
-            return true;
-        }
-        
-        return false;
-    };
-    
-    var countCellAliveNeighbours = function(i, j)
-    {
-        var count = 0;
-        
-        if (isCurrentStepCellAlive(i-1, j-1)) {count++;}
-        if (isCurrentStepCellAlive(i,   j-1)) {count++;}
-        if (isCurrentStepCellAlive(i+1, j-1)) {count++;}
-        if (isCurrentStepCellAlive(i-1, j)) {count++;}
-        if (isCurrentStepCellAlive(i+1, j)) {count++;}
-        if (isCurrentStepCellAlive(i-1, j+1)) {count++;}
-        if (isCurrentStepCellAlive(i,   j+1)) {count++;}
-        if (isCurrentStepCellAlive(i+1, j+1)) {count++;}
-        
-        return count;
-    };
-    
-    var isNextStepCellAlive = function(i, j)
-    {
-        if (world[i][j].current == 0)
-        {
-            var neighbours = countCellAliveNeighbours(i,j);
-            return (neighbours == 3) ? true : false;
-        }
-        
-        if (world[i][j].current == 1)
-        {
-            var neighbours = countCellAliveNeighbours(i,j);
-            return (neighbours == 2 || neighbours == 3) ? true : false;
-        }
-        
-        return false;
-    };
+    /* -------------------------- Drawing functions ------------------------- */
     
     var drawGrid = function()
     {
@@ -167,9 +90,91 @@
         }
     };
     
+    /* ------------------------ Game logic functions ------------------------ */
+    
+    var initWorld = function()
+    {
+        for(var i=0; i<GRID_COLUMNS; i++)
+        {
+            var row = [];
+            
+            for(var j = 0; j<GRID_ROWS; j++)
+            {
+                row[j] = {current: 0, next: 0};
+            }
+            
+            world[i] = row;
+        }
+    };
+    
+    var createRandomCells = function()
+    {
+        for(var i=0; i<settings.randomcells; i++)
+        {
+            do
+            {
+                var column = Math.floor(Math.random() * GRID_COLUMNS);
+                var row = Math.floor(Math.random() * GRID_ROWS);
+            }
+            while(world[column][row].current == 1);
+            
+            world[column][row].current = 1;
+        }
+    };
+    
+    var isCurrentStepCellAlive = function(i, j)
+    {
+        if (i < 0 || i >= GRID_COLUMNS
+         || j < 0 || j >= GRID_ROWS
+         || world[i][j].current == 0)
+        {
+            return false;
+        }
+        
+        if (world[i][j].current == 1)
+        {
+            return true;
+        }
+        
+        return false;
+    };
+    
+    var countCellAliveNeighbours = function(i, j)
+    {
+        var count = 0;
+        
+        if (isCurrentStepCellAlive(i-1, j-1)) {count++;}
+        if (isCurrentStepCellAlive(i,   j-1)) {count++;}
+        if (isCurrentStepCellAlive(i+1, j-1)) {count++;}
+        if (isCurrentStepCellAlive(i-1, j)) {count++;}
+        if (isCurrentStepCellAlive(i+1, j)) {count++;}
+        if (isCurrentStepCellAlive(i-1, j+1)) {count++;}
+        if (isCurrentStepCellAlive(i,   j+1)) {count++;}
+        if (isCurrentStepCellAlive(i+1, j+1)) {count++;}
+        
+        return count;
+    };
+    
+    var isNextStepCellAlive = function(i, j)
+    {
+        if (world[i][j].current == 0)
+        {
+            var neighbours = countCellAliveNeighbours(i,j);
+            return (neighbours == 3) ? true : false;
+        }
+        
+        if (world[i][j].current == 1)
+        {
+            var neighbours = countCellAliveNeighbours(i,j);
+            return (neighbours == 2 || neighbours == 3) ? true : false;
+        }
+        
+        return false;
+    };
+    
     var gameloop = function()
     {
-        /* TODO: 2 double-for here, could be improved with a 3-properties world[][] ?
+        /* TODO 2 double-for here, could be improved with a 3-properties world[][] ?
             world[][].now1 / .now2 / .now3
             => 1 double-for with current="now1", next="now2", tmp="now3" : 
             
@@ -209,16 +214,24 @@
         drawCells();
         generation++;
         document.getElementById("generation").innerHTML = "generation : " + generation;
-        
-        /* setTimeout() VS setInterval()
-           - chained setTimeout() will never eat 100% CPU (if it's called at the
-           end of the function), whereas setInterval() could : if the function
-           needs more time than the interval to execute, the next execution will
-           be pending and then executed as soon as the previous execution is
-           finished
-           - we don't need very precise intervals for a game of life ^^
-        */
-        gameloopID = setTimeout(gameloop, 140);
+    };
+    
+    /* --------------------- Events callback functions ---------------------- */
+    
+    var buttonDisable = function(button, disable)
+    {
+        if (disable)
+        {
+            button.disabled = true;
+            button.style.background = "gray";
+            button.style.color = "silver";
+        }
+        else
+        {
+            button.disabled = false;
+            button.style.background = "silver";
+            button.style.color = "white";
+        }
     };
     
     var fgrid = function()
@@ -242,14 +255,12 @@
     {
         if (document.getElementById("startreset").disabled)
         {
-            document.getElementById("startreset").disabled = false;
-            document.getElementById("startreset").style.background = "silver";
-            document.getElementById("startreset").style.color = "white";
+            buttonDisable(document.getElementById("startreset"), false);
         }
         
         initWorld();
-        drawGrid();
         createRandomCells();
+        drawGrid();
         drawCells();
     };
     
@@ -257,49 +268,60 @@
     {
         var button = document.getElementById("startreset");
         
-        gameloopID = setTimeout(gameloop, 100);
-        
-        document.getElementById("create").disabled = true;
-        document.getElementById("create").style.background = "gray";
-        document.getElementById("create").style.color = "silver";
-        
         document.getElementById("cells").disabled = true;
+        document.getElementById("interval").disabled = true;
+        buttonDisable(document.getElementById("create"), true);
         
         button.removeEventListener("click", fstart);
         button.addEventListener("click", freset);
         button.innerHTML = "RESET";
+        
+        /* setTimeout() VS setInterval()
+           - chained setTimeout() will never eat 100% CPU (if it's called at the
+           end of the function), whereas setInterval() could : if the function
+           needs more time than the interval to execute, the next execution will
+           be pending and then executed as soon as the previous execution is
+           finished
+           - we don't really need very precise intervals for a game of life (as
+           with setTimeout(), the real interval = interval + function execution)
+           
+           => but we allow the user to specify the interval, so it's
+              funnier and more precise with a setInterval() ^^
+        */
+        gameloopID = setInterval(gameloop, settings.refreshinterval);
     };
     
     var freset = function()
     {
         var button = document.getElementById("startreset");
         
-        clearTimeout(gameloopID);
+        clearInterval(gameloopID);
         
         initWorld();
         drawGrid();
-        
         generation = 0;
         document.getElementById("generation").innerHTML = "generation : 0";
         
-        document.getElementById("create").disabled = false;
-        document.getElementById("create").style.background = "silver";
-        document.getElementById("create").style.color = "white";
-        
-        document.getElementById("cells").disabled = false;
-        
+        buttonDisable(button, true);
         button.removeEventListener("click", freset);
         button.addEventListener("click", fstart);
-        
-        button.disabled = true;
-        button.style.background = "gray";
-        button.style.color = "silver";
         button.innerHTML = "START";
+        
+        document.getElementById("cells").disabled = false;
+        document.getElementById("interval").disabled = false;
+        buttonDisable(document.getElementById("create"), false);
     };
     
     var fcells = function()
     {
-        settings.randomcells = document.getElementById("cells").value;
+        var max = GRID_COLUMNS * GRID_ROWS;
+        var value = document.getElementById("cells").value;
+        settings.randomcells = (value > max) ? max : value;
+    };
+    
+    var finterval = function()
+    {
+        settings.refreshinterval = document.getElementById("interval").value;
     };
     
     
@@ -313,26 +335,25 @@
     settings.grid = true;
     settings.randomcells = 300;
     settings.drawfunction = drawSquare;
+    settings.refreshinterval = 120;
     
+    document.getElementById("cells").addEventListener("input", fcells);
+    document.getElementById("interval").addEventListener("input", finterval);
     document.getElementById("grid").addEventListener("click", fgrid);
     document.getElementById("squares").addEventListener("click", fshape);
     document.getElementById("circles").addEventListener("click", fshape);
     document.getElementById("create").addEventListener("click", fcreate);
     document.getElementById("startreset").addEventListener("click", fstart);
-    document.getElementById("cells").addEventListener("input", fcells);
     
-    document.getElementById("startreset").disabled = true;
-    document.getElementById("startreset").style.background = "gray";
-    document.getElementById("startreset").style.color = "silver";
+    buttonDisable(document.getElementById("startreset"), true);
     
     initWorld();
     drawGrid();
     
-    /*TODO
-        - improve script structure ?
-        - add input for interval between refresh
-        - allow user to make pixels alive/dead ("activate god mode" ^^)
-        - add a "news" part on my website main page
+    /* TODO
+        => allow the user to make pixels alive/dead
+            + draw your world !
+            + activate god mode ^^
     */
 })();
 

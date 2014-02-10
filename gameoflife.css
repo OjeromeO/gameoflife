@@ -66,9 +66,9 @@ div#wrapperinput
     padding-top: 30px;
 }
 
-input#cells, input#grid, input#squares, input#circles
+input#cells, input#interval, input#grid, input#squares, input#circles
 {
-    margin: 10px 0;
+    margin: 8px 0;
 }
 
 input#grid
