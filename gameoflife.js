@@ -3,7 +3,6 @@
     var GRID_SQUARE_SIZE = 10;
     var GRID_COLUMNS = 70;
     var GRID_ROWS = 50;
-    var RANDOM_CELLS = 300;
     
     
     
@@ -18,10 +17,12 @@
         randomcells: undefined,
         drawfunction: undefined
     };
+    var gameloopID;
+    var generation = 0;
     
     
     
-    var createWorld = function()
+    var initWorld = function()
     {
         for(var i=0; i<GRID_COLUMNS; i++)
         {
@@ -38,7 +39,7 @@
     
     var createRandomCells = function()
     {
-        for(var i=0; i<RANDOM_CELLS; i++)
+        for(var i=0; i<settings.randomcells; i++)
         {
             do
             {
@@ -160,9 +161,7 @@
             {
                 if (world[i][j].current == 1)
                 {
-                    //drawSquare(i, j);
                     settings.drawfunction(i, j);
-                    //drawfunction(i, j);
                 }
             }
         }
@@ -208,6 +207,8 @@
         
         drawGrid();
         drawCells();
+        generation++;
+        document.getElementById("generation").innerHTML = "generation : " + generation;
         
         /* setTimeout() VS setInterval()
            - chained setTimeout() will never eat 100% CPU (if it's called at the
@@ -217,7 +218,7 @@
            finished
            - we don't need very precise intervals for a game of life ^^
         */
-        setTimeout(gameloop, 140);
+        gameloopID = setTimeout(gameloop, 140);
     };
     
     var fgrid = function()
@@ -237,38 +238,101 @@
         }
     };
     
+    var fcreate = function()
+    {
+        if (document.getElementById("startreset").disabled)
+        {
+            document.getElementById("startreset").disabled = false;
+            document.getElementById("startreset").style.background = "silver";
+            document.getElementById("startreset").style.color = "white";
+        }
+        
+        initWorld();
+        drawGrid();
+        createRandomCells();
+        drawCells();
+    };
+    
+    var fstart = function()
+    {
+        var button = document.getElementById("startreset");
+        
+        gameloopID = setTimeout(gameloop, 100);
+        
+        document.getElementById("create").disabled = true;
+        document.getElementById("create").style.background = "gray";
+        document.getElementById("create").style.color = "silver";
+        
+        document.getElementById("cells").disabled = true;
+        
+        button.removeEventListener("click", fstart);
+        button.addEventListener("click", freset);
+        button.innerHTML = "RESET";
+    };
+    
+    var freset = function()
+    {
+        var button = document.getElementById("startreset");
+        
+        clearTimeout(gameloopID);
+        
+        initWorld();
+        drawGrid();
+        
+        generation = 0;
+        document.getElementById("generation").innerHTML = "generation : 0";
+        
+        document.getElementById("create").disabled = false;
+        document.getElementById("create").style.background = "silver";
+        document.getElementById("create").style.color = "white";
+        
+        document.getElementById("cells").disabled = false;
+        
+        button.removeEventListener("click", freset);
+        button.addEventListener("click", fstart);
+        
+        button.disabled = true;
+        button.style.background = "gray";
+        button.style.color = "silver";
+        button.innerHTML = "START";
+    };
+    
+    var fcells = function()
+    {
+        settings.randomcells = document.getElementById("cells").value;
+    };
     
     
-    var canvas = document.getElementById("game");
+    
+    var canvas = document.getElementById("canvas");
     canvas.width = CANVAS_WIDTH;
     canvas.height = CANVAS_HEIGHT;
     
     context = canvas.getContext("2d");
     
     settings.grid = true;
-    settings.randomcells = 100;
+    settings.randomcells = 300;
     settings.drawfunction = drawSquare;
     
     document.getElementById("grid").addEventListener("click", fgrid);
     document.getElementById("squares").addEventListener("click", fshape);
     document.getElementById("circles").addEventListener("click", fshape);
+    document.getElementById("create").addEventListener("click", fcreate);
+    document.getElementById("startreset").addEventListener("click", fstart);
+    document.getElementById("cells").addEventListener("input", fcells);
     
-    createWorld();
-    createRandomCells();
+    document.getElementById("startreset").disabled = true;
+    document.getElementById("startreset").style.background = "gray";
+    document.getElementById("startreset").style.color = "silver";
     
+    initWorld();
     drawGrid();
-    drawCells();
-    
-    setTimeout(gameloop, 100);
     
     /*TODO
-        - add start/reset button (do...while() of the code, beginning after the context=... ?)
-        - add input for count of random cells (mousedown, mouseup, input, keypress) : just at the beginning 
+        - improve script structure ?
         - add input for interval between refresh
-        - display the generation count
         - allow user to make pixels alive/dead ("activate god mode" ^^)
         - add a "news" part on my website main page
-        - use a project page for the gfame of life, and link it to my personal website (same thing for klotski, instead of replicating all the stuff...)
     */
 })();
 

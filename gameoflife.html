@@ -10,14 +10,24 @@
     <body>
         <h1>Game of life</h1>
         
-        <canvas id="game">
-            Sorry internaut, but our &lt;canvas&gt; is in another browser...
-        </canvas>
-        <div id="wrapper"><p id="reset">RESET</p></div>
-        <input type="number" value="100"/><br />
-        <input type="checkbox" name="grid" id="grid" checked/><label for="grid">Grid</label><br />
-        <input type="radio" name="shape" value="squares" id="squares" checked/> <label for="squares">Squares</label>
-        <input type="radio" name="shape" value="circles" id="circles" /> <label for="circles">Circles</label>
+        <div id="game">
+            <div id="gameframe">
+                <canvas id="canvas">
+                    Sorry internaut, but our &lt;canvas&gt; is in another browser...
+                </canvas>
+                <p id="generation">generation : 0</p>
+            </div>
+            <div id="wrapperbuttons">
+                <button id="create">CREATE A NEW WORLD !</button><br />
+                <button id="startreset">START</button>
+            </div>
+            <div id="wrapperinput">
+                <input type="number" value="300" size="1" id="cells"/><label for="cells"> random cells created</label><br />
+                <input type="checkbox" name="grid" id="grid" checked/><label for="grid"> grid</label><br />
+                <input type="radio" name="shape" value="squares" id="squares" checked/> <label for="squares"> squares</label>
+                <input type="radio" name="shape" value="circles" id="circles" /> <label for="circles"> circles</label>
+            </div>
+        </div>
         <script type="text/javascript" src="gameoflife.js"></script>
     </body>
     
