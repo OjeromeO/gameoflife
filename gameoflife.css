@@ -61,19 +61,49 @@ button#create, button#startreset
 div#wrapperinput
 {
     display: inline-block;
-    text-align: left;
-    padding-left: 10px;
-    padding-top: 30px;
-}
-
-input#cells, input#interval, input#grid, input#squares, input#circles
-{
-    margin: 8px 0;
-}
-
-input#grid
-{
+    margin-left: 10px;
     margin-top: 30px;
+}
+
+div#input1, div#input2, div#input3
+{
+    text-align: left;
+    display: inline-block;
+    vertical-align: middle;
+    height: 70px;
+}
+
+div#input1
+{
+    border-right: 1px solid silver;
+    padding-right: 10px;
+}
+
+div#input2
+{
+    border-left: 1px solid silver;
+    border-right: 1px solid silver;
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
+div#input3
+{
+    border-left: 1px solid silver;
+    padding-left: 10px;
+}
+
+div#input3 label
+{
+    display: inline-block;
+    width: 60px;
+    text-align: right;
+    margin-right: 6px;
+}
+
+input#cells, input#grid, input#width
+{
+    margin-bottom: 15px;
 }
 
 input#circles

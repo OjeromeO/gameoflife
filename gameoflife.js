@@ -1,24 +1,23 @@
 (function()
 {
     var GRID_SQUARE_SIZE = 10;
-    var GRID_COLUMNS = 70;
-    var GRID_ROWS = 50;
     
     
-    
-    var CANVAS_WIDTH = GRID_SQUARE_SIZE*GRID_COLUMNS + 1;
-    var CANVAS_HEIGHT = GRID_SQUARE_SIZE*GRID_ROWS + 1;
     
     var context;
     var world = [];
     var settings =
     {
+        nbrows: undefined,
+        nbcolumns: undefined,
         grid: undefined,
         randomcells: undefined,
         drawfunction: undefined,
         refreshinterval: undefined
     };
     var gameloopID;
+    var canvaswidth;
+    var canvasheight;
     var generation = 0;
     
     
@@ -28,7 +27,7 @@
     var drawGrid = function()
     {
         context.fillStyle = "white";
-        context.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+        context.fillRect(0, 0, canvaswidth, canvasheight);
         
         if (!settings.grid)
             return;
@@ -44,16 +43,16 @@
         to draw half a pixel, so a 2px large line between x=2 and x=4 will be
         filled, and because of that approximation the color will be half as dark
         as the specified stroke color */
-        for(var i=0.5; i<CANVAS_WIDTH; i+=GRID_SQUARE_SIZE)
+        for(var i=0.5; i<canvaswidth; i+=GRID_SQUARE_SIZE)
         {
             context.moveTo(i, 0);
-            context.lineTo(i, CANVAS_HEIGHT);
+            context.lineTo(i, canvasheight);
         }
         
-        for(var j=0.5; j<CANVAS_HEIGHT; j+=GRID_SQUARE_SIZE)
+        for(var j=0.5; j<canvasheight; j+=GRID_SQUARE_SIZE)
         {
             context.moveTo(0, j);
-            context.lineTo(CANVAS_WIDTH, j);
+            context.lineTo(canvaswidth, j);
         }
         
         context.stroke();
@@ -78,9 +77,9 @@
     
     var drawCells = function()
     {
-        for(var i=0; i<GRID_COLUMNS; i++)
+        for(var i=0; i<settings.nbcolumns; i++)
         {
-            for(var j=0; j<GRID_ROWS; j++)
+            for(var j=0; j<settings.nbrows; j++)
             {
                 if (world[i][j].current == 1)
                 {
@@ -94,11 +93,11 @@
     
     var initWorld = function()
     {
-        for(var i=0; i<GRID_COLUMNS; i++)
+        for(var i=0; i<settings.nbcolumns; i++)
         {
             var row = [];
             
-            for(var j = 0; j<GRID_ROWS; j++)
+            for(var j = 0; j<settings.nbrows; j++)
             {
                 row[j] = {current: 0, next: 0};
             }
@@ -113,8 +112,8 @@
         {
             do
             {
-                var column = Math.floor(Math.random() * GRID_COLUMNS);
-                var row = Math.floor(Math.random() * GRID_ROWS);
+                var column = Math.floor(Math.random() * settings.nbcolumns);
+                var row = Math.floor(Math.random() * settings.nbrows);
             }
             while(world[column][row].current == 1);
             
@@ -124,8 +123,8 @@
     
     var isCurrentStepCellAlive = function(i, j)
     {
-        if (i < 0 || i >= GRID_COLUMNS
-         || j < 0 || j >= GRID_ROWS
+        if (i < 0 || i >= settings.nbcolumns
+         || j < 0 || j >= settings.nbrows
          || world[i][j].current == 0)
         {
             return false;
@@ -190,9 +189,9 @@
             => benchmark with performance.now() ?
         */
         
-        for(var i=0; i<GRID_COLUMNS; i++)
+        for(var i=0; i<settings.nbcolumns; i++)
         {
-            for(var j=0; j<GRID_ROWS; j++)
+            for(var j=0; j<settings.nbrows; j++)
             {
                 if (isNextStepCellAlive(i,j))
                 {
@@ -201,9 +200,9 @@
             }
         }
         
-        for(var i=0; i<GRID_COLUMNS; i++)
+        for(var i=0; i<settings.nbcolumns; i++)
         {
-            for(var j=0; j<GRID_ROWS; j++)
+            for(var j=0; j<settings.nbrows; j++)
             {
                 world[i][j].current = world[i][j].next;
                 world[i][j].next = 0;
@@ -237,6 +236,12 @@
     var fgrid = function()
     {
         settings.grid = document.getElementById("grid").checked;
+        
+        if (generation == 0)    /* game is not started : refresh manually */
+        {
+            drawGrid();
+            drawCells();
+        }
     };
     
     var fshape = function()
@@ -248,6 +253,12 @@
         else
         {
             settings.drawfunction = drawSquare;
+        }
+        
+        if (generation == 0)    /* game is not started : refresh manually */
+        {
+            drawGrid();
+            drawCells();
         }
     };
     
@@ -270,6 +281,8 @@
         
         document.getElementById("cells").disabled = true;
         document.getElementById("interval").disabled = true;
+        document.getElementById("width").disabled = true;
+        document.getElementById("height").disabled = true;
         buttonDisable(document.getElementById("create"), true);
         
         button.removeEventListener("click", fstart);
@@ -309,14 +322,24 @@
         
         document.getElementById("cells").disabled = false;
         document.getElementById("interval").disabled = false;
+        document.getElementById("width").disabled = false;
+        document.getElementById("height").disabled = false;
         buttonDisable(document.getElementById("create"), false);
     };
     
     var fcells = function()
     {
-        var max = GRID_COLUMNS * GRID_ROWS;
-        var value = document.getElementById("cells").value;
-        settings.randomcells = (value > max) ? max : value;
+        var newval = document.getElementById("cells").value;
+        
+        if (settings.nbcolumns * settings.nbrows < newval)
+        {
+            settings.randomcells = settings.nbcolumns * settings.nbrows;
+            document.getElementById("cells").value = settings.randomcells;
+        }
+        else
+        {
+            settings.randomcells = newval;
+        }
     };
     
     var finterval = function()
@@ -324,19 +347,65 @@
         settings.refreshinterval = document.getElementById("interval").value;
     };
     
+    var fwidth = function()
+    {
+        settings.nbcolumns = document.getElementById("width").value
+        canvaswidth = GRID_SQUARE_SIZE * settings.nbcolumns + 1;
+        document.getElementById("canvas").width = canvaswidth;
+        
+        if (settings.nbcolumns * settings.nbrows < settings.randomcells)
+        {
+            settings.randomcells = settings.nbcolumns * settings.nbrows;
+            document.getElementById("cells").value = settings.randomcells;
+        }
+        
+        initWorld();
+        drawGrid();
+        drawCells();
+    };
+    
+    var fheight = function()
+    {
+        settings.nbrows = document.getElementById("height").value
+        canvasheight = GRID_SQUARE_SIZE * settings.nbrows + 1;
+        document.getElementById("canvas").height = canvasheight;
+        
+        if (settings.nbcolumns * settings.nbrows < settings.randomcells)
+        {
+            settings.randomcells = settings.nbcolumns * settings.nbrows;
+            document.getElementById("cells").value = settings.randomcells;
+        }
+        
+        initWorld();
+        drawGrid();
+        drawCells();
+    };
     
     
-    var canvas = document.getElementById("canvas");
-    canvas.width = CANVAS_WIDTH;
-    canvas.height = CANVAS_HEIGHT;
-    
-    context = canvas.getContext("2d");
     
     settings.grid = true;
     settings.randomcells = 300;
     settings.drawfunction = drawSquare;
     settings.refreshinterval = 120;
+    settings.nbcolumns = 70;
+    settings.nbrows = 50;
     
+    document.getElementById("cells").value = 300;
+    document.getElementById("interval").value = 120;
+    document.getElementById("width").value = 70;
+    document.getElementById("height").value = 50;
+    
+    canvaswidth = GRID_SQUARE_SIZE * settings.nbcolumns + 1;
+    canvasheight = GRID_SQUARE_SIZE * settings.nbrows + 1;
+    
+    var canvas = document.getElementById("canvas");
+    canvas.width = canvaswidth;
+    canvas.height = canvasheight;
+    
+    context = canvas.getContext("2d");
+    
+    document.getElementById("width").addEventListener("input", fwidth);
+    document.getElementById("height").addEventListener("input", fheight);
     document.getElementById("cells").addEventListener("input", fcells);
     document.getElementById("interval").addEventListener("input", finterval);
     document.getElementById("grid").addEventListener("click", fgrid);
